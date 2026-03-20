@@ -40,8 +40,7 @@ export class BootScene extends Phaser.Scene {
       loadText.destroy();
     });
 
-    // Load a small dummy file to trigger progress
-    this.load.json('_dummy', 'data:application/json,{}');
+    // No external assets to load — progress completes immediately
   }
 
   private generateTextures(): void {
