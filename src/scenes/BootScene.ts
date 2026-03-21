@@ -38,7 +38,7 @@ export class BootScene extends Phaser.Scene {
       loadText.destroy();
     });
 
-    this.load.json('_dummy', 'data:application/json,{}');
+    this.load.json('_dummy', 'data:application/json;base64,e30=');
   }
 
   private generateTextures(): void {
