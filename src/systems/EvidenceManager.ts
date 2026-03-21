@@ -6,80 +6,85 @@ export interface EvidenceItem {
   name: string;
   description: string;
   room: RoomId;
-  seedVariant?: string;
   detailText: string;
+  conditional?: boolean;
+  conditionFlag?: string;
+  lockedText?: string;
 }
 
 const ALL_EVIDENCE: EvidenceItem[] = [
   {
-    id: 'torn_invitation',
-    name: 'Разорванное приглашение',
-    description: 'Найдено в прихожей',
+    id: 'clue_guestbook',
+    name: 'Гостевая книга',
+    description: 'Найдена в прихожей',
     room: RoomId.ENTRANCE,
-    detailText: 'Половина приглашения на вечеринку. Текст обрывается на: «...не приходи, если помнишь...»',
+    detailText: '«Semiira — душа компании!» «S. была тихой. Рисовала в углу.» «10/10» — TrueViewer42. Все описывают разных людей.',
   },
   {
-    id: 'recipe_note',
-    name: 'Рецепт с запиской',
-    description: 'Кухня, на обороте зашифрованное сообщение',
-    room: RoomId.KITCHEN,
-    detailText: 'На лицевой — рецепт торта. На обороте неразборчивым почерком: «Она не та, за кого себя выдаёт. Проверь зеркала.»',
-  },
-  {
-    id: 'strange_photo',
-    name: 'Странная фотография',
-    description: 'Семиира выглядит иначе',
+    id: 'clue_toast_tape',
+    name: 'Тост-кассета',
+    description: 'VHS-плеер в гостиной',
     room: RoomId.LIVING_ROOM,
-    detailText: 'Групповое фото с прошлой вечеринки. Все улыбаются, но лицо Семииры... размыто. Как будто фотоаппарат не смог её запечатлеть.',
+    detailText: 'SEMIIRA: «Привет всем! Это лучший день…» [глитч] «…жизни.» [обрыв] Улыбка отрепетированная.',
   },
   {
-    id: 'maks_diary',
-    name: 'Дневник Макса',
-    description: 'Записи о трёх версиях',
-    room: RoomId.LIBRARY,
-    detailText: '«Я заметил три Семииры. Праздничная — та, что смеётся. Истинная — та, что молчит. Отражённая — та, что смотрит из зеркал. Какая из них настоящая?»',
+    id: 'clue_photo',
+    name: 'Фотография',
+    description: 'На стене в гостиной',
+    room: RoomId.LIVING_ROOM,
+    detailText: 'Два лица на фото. Одно яркое. Другое размытое. «Которая из них я?»',
   },
   {
-    id: 'wilted_flowers',
-    name: 'Увядшие цветы',
-    description: 'Необычные растения в саду',
-    room: RoomId.GARDEN,
-    detailText: 'Цветы, которые цветут только при лунном свете. Кто-то посадил их кругом, как защитный символ. Лепестки холодные на ощупь.',
+    id: 'clue_note',
+    name: 'Записка',
+    description: 'На барной стойке',
+    room: RoomId.KITCHEN,
+    detailText: 'Мятая записка. «Света, я забыла своё лицо. — С.»',
   },
   {
-    id: 'mirror_shard',
+    id: 'clue_mirror',
     name: 'Осколок зеркала',
-    description: 'Показывает отражение не того, кто смотрит',
+    description: 'В спальне на полу',
     room: RoomId.BEDROOM,
-    detailText: 'Маленький осколок от большого зеркала. Когда смотришь в него, видишь не себя — а кого-то похожего. Но с другими глазами.',
+    detailText: 'Осколок зеркала. Отражение — грустнее. Отпечатки пальцев.',
   },
   {
-    id: 'vhs_tape',
-    name: 'VHS-кассета',
-    description: 'Запись прошлого праздника',
-    room: RoomId.BASEMENT,
-    detailText: 'Кассета с надписью «ДР — НЕ СМОТРЕТЬ». На записи — вечеринка, которой ты не помнишь. Все гости те же. Но ты на ней — другая.',
+    id: 'clue_real_tape',
+    name: 'Настоящая кассета',
+    description: 'В ящике стола в спальне',
+    room: RoomId.BEDROOM,
+    conditional: true,
+    conditionFlag: 'sveta_told_tape',
+    lockedText: 'Ящик заперт. Может, кто-то знает…',
+    detailText: 'SEMIIRA: «Это… я. Настоящая.» «Я не помню, кто я.» «Все помнят разную.» «Кто помнит правильно?»',
   },
   {
-    id: 'old_letter',
-    name: 'Старое письмо',
-    description: 'От неизвестного отправителя',
+    id: 'clue_diary',
+    name: 'Дневник стримера',
+    description: 'В библиотеке на полке',
+    room: RoomId.LIBRARY,
+    detailText: 'Записи за два года. Первые — живые, смешные. Последние — сухие, по шаблону. «Сегодня стрим #847. Улыбнуться. Поздороваться. Не забыть подписку.»',
+  },
+  {
+    id: 'clue_fan_letters',
+    name: 'Письма фанатов',
+    description: 'В коробке на чердаке',
     room: RoomId.ATTIC,
-    detailText: '«Дорогая Семиира, если ты читаешь это — значит, ты снова забыла. Зеркала помнят. Гости помнят. Только ты — нет. Но так было нужно.»',
+    detailText: '«Ты такая весёлая!» «Ты такая загадочная...» «Ты такая грустная на самом деле.» Каждый описывает совершенно другого человека.',
   },
   {
-    id: 'mirror_key',
-    name: 'Зеркальный ключ',
-    description: 'Открывает зеркальную комнату',
-    room: RoomId.BATHROOM,
-    detailText: 'Ключ из отражающего металла. На нём выгравировано: «Правда — за отражением». Подходит к двери, которую ты раньше не замечала.',
+    id: 'clue_old_photo',
+    name: 'Старое фото',
+    description: 'В саду, у скамейки',
+    room: RoomId.GARDEN,
+    detailText: 'Фото до стримов. Никакого неона, никакого макияжа. Обычная девушка в свитере. На обороте: «Последний нормальный день.»',
   },
   {
-    id: 'last_page',
-    name: 'Последняя страница',
-    description: 'Разгадка всей истории',
-    room: RoomId.SECRET_ROOM,
-    detailText: '«Все три Семииры — это ты. Праздничная — та, которую видят гости. Истинная — та, которую видишь ты сама. Отражённая — та, которую помнит дом. Ты не разбита. Ты — целая.»',
+    id: 'clue_broken_award',
+    name: 'Разбитая награда',
+    description: 'В подвале, старая студия',
+    room: RoomId.BASEMENT,
+    detailText: 'Стриминговая награда «Лучший развлекательный канал». Сломана пополам. Рядом записка: «Это не я.»',
   },
 ];
 
@@ -102,7 +107,15 @@ class EvidenceManagerClass {
 
   collect(id: string): EvidenceItem | undefined {
     const item = this.getById(id);
-    if (item && !StateManager.hasEvidence(id)) {
+    if (!item) return undefined;
+
+    if (item.conditional && item.conditionFlag) {
+      if (!StateManager.hasSeenDialogue(item.conditionFlag)) {
+        return undefined;
+      }
+    }
+
+    if (!StateManager.hasEvidence(id)) {
       StateManager.collectEvidence(id);
       return item;
     }
@@ -111,6 +124,17 @@ class EvidenceManagerClass {
 
   isCollected(id: string): boolean {
     return StateManager.hasEvidence(id);
+  }
+
+  isLocked(id: string): boolean {
+    const item = this.getById(id);
+    if (!item || !item.conditional || !item.conditionFlag) return false;
+    return !StateManager.hasSeenDialogue(item.conditionFlag);
+  }
+
+  getLockedText(id: string): string | undefined {
+    const item = this.getById(id);
+    return item?.lockedText;
   }
 }
 

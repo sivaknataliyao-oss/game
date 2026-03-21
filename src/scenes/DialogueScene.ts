@@ -4,24 +4,48 @@ import { DialogueManager, DialogueNode, DialogueChoice } from '../systems/Dialog
 import { StateManager } from '../systems/StateManager';
 import { EvidenceManager } from '../systems/EvidenceManager';
 
+interface DialogueSceneData {
+  npcId?: NpcId;
+  objectLines?: string[];
+  objectLabel?: string;
+  isVhs?: boolean;
+}
+
 export class DialogueScene extends Phaser.Scene {
-  private npcId!: NpcId;
+  private npcId?: NpcId;
   private currentNode!: DialogueNode;
   private dialogueBox!: Phaser.GameObjects.Graphics;
   private speakerText!: Phaser.GameObjects.Text;
   private bodyText!: Phaser.GameObjects.Text;
   private choiceTexts: Phaser.GameObjects.Text[] = [];
   private choiceZones: Phaser.GameObjects.Rectangle[] = [];
+  private choiceBgs: Phaser.GameObjects.Graphics[] = [];
   private portrait!: Phaser.GameObjects.Graphics;
   private continueHint!: Phaser.GameObjects.Text;
   private overlay!: Phaser.GameObjects.Graphics;
+
+  // Object dialogue mode
+  private objectLines?: string[];
+  private objectLabel?: string;
+  private isVhs = false;
+  private objectLineIndex = 0;
+
+  // Multi-line NPC dialogue
+  private currentLines?: string[];
+  private currentLineIndex = 0;
 
   constructor() {
     super({ key: 'DialogueScene' });
   }
 
-  init(data: { npcId: NpcId }): void {
+  init(data: DialogueSceneData): void {
     this.npcId = data.npcId;
+    this.objectLines = data.objectLines;
+    this.objectLabel = data.objectLabel;
+    this.isVhs = data.isVhs || false;
+    this.objectLineIndex = 0;
+    this.currentLines = undefined;
+    this.currentLineIndex = 0;
   }
 
   create(): void {
@@ -30,43 +54,55 @@ export class DialogueScene extends Phaser.Scene {
     this.overlay.fillStyle(0x000000, 0.6);
     this.overlay.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+    // Determine color scheme
+    const accentColor = this.isVhs
+      ? COLORS.NEON_CYAN
+      : (this.npcId ? (NPC_COLORS[this.npcId] || COLORS.NEON_PINK) : COLORS.NEON_PINK);
+    const accentHex = `#${accentColor.toString(16).padStart(6, '0')}`;
+
     // Dialogue box
     const boxY = GAME_HEIGHT - 280;
     const boxH = 260;
     this.dialogueBox = this.add.graphics();
-    this.dialogueBox.fillStyle(COLORS.DEEP_PURPLE, 0.95);
+    this.dialogueBox.fillStyle(this.isVhs ? 0x0A1A2A : COLORS.DEEP_PURPLE, 0.95);
     this.dialogueBox.fillRect(20, boxY, GAME_WIDTH - 40, boxH);
-    this.dialogueBox.lineStyle(2, COLORS.NEON_PINK, 0.8);
+    this.dialogueBox.lineStyle(2, accentColor, 0.8);
     this.dialogueBox.strokeRect(20, boxY, GAME_WIDTH - 40, boxH);
 
-    // Portrait area
-    this.portrait = this.add.graphics();
-    const npcColor = NPC_COLORS[this.npcId] || COLORS.NEON_PINK;
-    this.portrait.fillStyle(npcColor, 0.3);
-    this.portrait.fillRect(40, boxY + 15, 100, 100);
-    this.portrait.lineStyle(2, npcColor, 0.8);
-    this.portrait.strokeRect(40, boxY + 15, 100, 100);
-    // NPC initial in portrait
-    const initial = NPC_NAMES[this.npcId]?.[0] || '?';
-    this.add.text(90, boxY + 65, initial, {
-      fontFamily: FONTS.TITLE,
-      fontSize: '36px',
-      color: `#${npcColor.toString(16).padStart(6, '0')}`,
-    }).setOrigin(0.5);
+    if (this.npcId) {
+      // Portrait area for NPC mode
+      this.portrait = this.add.graphics();
+      this.portrait.fillStyle(accentColor, 0.3);
+      this.portrait.fillRect(40, boxY + 15, 100, 100);
+      this.portrait.lineStyle(2, accentColor, 0.8);
+      this.portrait.strokeRect(40, boxY + 15, 100, 100);
+      const initial = NPC_NAMES[this.npcId]?.[0] || '?';
+      this.add.text(90, boxY + 65, initial, {
+        fontFamily: FONTS.TITLE,
+        fontSize: '36px',
+        color: accentHex,
+      }).setOrigin(0.5);
+    }
 
     // Speaker name
-    this.speakerText = this.add.text(160, boxY + 15, NPC_NAMES[this.npcId], {
+    const speakerName = this.npcId
+      ? NPC_NAMES[this.npcId]
+      : (this.objectLabel || '');
+    const speakerX = this.npcId ? 160 : 40;
+    this.speakerText = this.add.text(speakerX, boxY + 15, speakerName, {
       fontFamily: FONTS.TITLE,
       fontSize: '14px',
-      color: `#${npcColor.toString(16).padStart(6, '0')}`,
+      color: accentHex,
     });
 
     // Body text
-    this.bodyText = this.add.text(160, boxY + 45, '', {
+    const bodyX = this.npcId ? 160 : 40;
+    const bodyWidth = this.npcId ? GAME_WIDTH - 220 : GAME_WIDTH - 100;
+    this.bodyText = this.add.text(bodyX, boxY + 45, '', {
       fontFamily: FONTS.BODY,
       fontSize: '22px',
-      color: CSS_COLORS.WHITE,
-      wordWrap: { width: GAME_WIDTH - 220 },
+      color: this.isVhs ? CSS_COLORS.NEON_CYAN : CSS_COLORS.WHITE,
+      wordWrap: { width: bodyWidth },
       lineSpacing: 4,
     });
 
@@ -74,7 +110,7 @@ export class DialogueScene extends Phaser.Scene {
     this.continueHint = this.add.text(GAME_WIDTH - 60, boxY + boxH - 25, '▶', {
       fontFamily: FONTS.BODY,
       fontSize: '20px',
-      color: CSS_COLORS.NEON_CYAN,
+      color: this.isVhs ? CSS_COLORS.NEON_CYAN : CSS_COLORS.NEON_CYAN,
     }).setOrigin(0.5).setAlpha(0);
 
     this.tweens.add({
@@ -85,10 +121,26 @@ export class DialogueScene extends Phaser.Scene {
       repeat: -1,
     });
 
-    // Start dialogue
-    const startNode = DialogueManager.getStartNode(this.npcId);
-    if (startNode) {
-      this.showNode(startNode);
+    // VHS scanlines for tape objects
+    if (this.isVhs) {
+      const scanlines = this.add.graphics().setDepth(100);
+      scanlines.setAlpha(0.08);
+      for (let y = 0; y < GAME_HEIGHT; y += 3) {
+        scanlines.fillStyle(0x00FFFF, 1);
+        scanlines.fillRect(0, y, GAME_WIDTH, 1);
+      }
+    }
+
+    // Route to object or NPC dialogue
+    if (this.objectLines && this.objectLines.length > 0) {
+      this.startObjectDialogue();
+    } else if (this.npcId) {
+      const startNode = DialogueManager.getStartNode(this.npcId);
+      if (startNode) {
+        this.showNode(startNode);
+      } else {
+        this.showFallbackDialogue();
+      }
     } else {
       this.showFallbackDialogue();
     }
@@ -99,11 +151,42 @@ export class DialogueScene extends Phaser.Scene {
     });
   }
 
+  // === OBJECT DIALOGUE MODE ===
+  private startObjectDialogue(): void {
+    this.objectLineIndex = 0;
+    this.showObjectLine();
+  }
+
+  private showObjectLine(): void {
+    if (!this.objectLines || this.objectLineIndex >= this.objectLines.length) {
+      this.continueHint.setText('✕');
+      this.continueHint.setAlpha(1);
+      this.input.once('pointerdown', () => this.closeDialogue());
+      return;
+    }
+
+    const line = this.objectLines[this.objectLineIndex];
+    this.typewriteText(line, () => {
+      this.objectLineIndex++;
+      if (this.objectLineIndex < this.objectLines!.length) {
+        this.continueHint.setAlpha(1);
+        this.input.once('pointerdown', () => {
+          this.continueHint.setAlpha(0);
+          this.showObjectLine();
+        });
+      } else {
+        this.continueHint.setText('✕');
+        this.continueHint.setAlpha(1);
+        this.input.once('pointerdown', () => this.closeDialogue());
+      }
+    });
+  }
+
+  // === NPC DIALOGUE MODE ===
   private showNode(node: DialogueNode): void {
-    // Check seed variant
     if (!DialogueManager.shouldShowNode(node)) {
       if (node.next) {
-        const nextNode = DialogueManager.getNode(this.npcId, node.next);
+        const nextNode = DialogueManager.getNode(this.npcId!, node.next);
         if (nextNode) {
           this.showNode(nextNode);
           return;
@@ -116,15 +199,44 @@ export class DialogueScene extends Phaser.Scene {
     this.currentNode = node;
     DialogueManager.applyNode(node);
 
-    // Update speaker if different
     this.speakerText.setText(node.speaker);
-
-    // Typewriter effect for body text
-    this.bodyText.setText('');
     this.clearChoices();
     this.continueHint.setAlpha(0);
 
-    const fullText = node.text;
+    // Check for multi-line dialogue
+    if (node.lines && node.lines.length > 0) {
+      this.currentLines = node.lines;
+      this.currentLineIndex = 0;
+      this.showCurrentLine(node);
+    } else {
+      this.currentLines = undefined;
+      this.typewriteText(node.text, () => this.onTextComplete(node));
+    }
+  }
+
+  private showCurrentLine(node: DialogueNode): void {
+    if (!this.currentLines || this.currentLineIndex >= this.currentLines.length) {
+      this.onTextComplete(node);
+      return;
+    }
+
+    const line = this.currentLines[this.currentLineIndex];
+    this.typewriteText(line, () => {
+      this.currentLineIndex++;
+      if (this.currentLineIndex < this.currentLines!.length) {
+        this.continueHint.setAlpha(1);
+        this.input.once('pointerdown', () => {
+          this.continueHint.setAlpha(0);
+          this.showCurrentLine(node);
+        });
+      } else {
+        this.onTextComplete(node);
+      }
+    });
+  }
+
+  private typewriteText(fullText: string, onComplete: () => void): void {
+    this.bodyText.setText('');
     let charIdx = 0;
     const typeTimer = this.time.addEvent({
       delay: 25,
@@ -133,23 +245,21 @@ export class DialogueScene extends Phaser.Scene {
         charIdx++;
         this.bodyText.setText(fullText.substring(0, charIdx));
         if (charIdx >= fullText.length) {
-          this.onTextComplete(node);
+          onComplete();
         }
       },
     });
 
-    // Click to skip typewriter
     const skipHandler = () => {
       typeTimer.remove();
       this.bodyText.setText(fullText);
-      this.onTextComplete(node);
+      onComplete();
       this.input.off('pointerdown', skipHandler);
     };
     this.input.once('pointerdown', skipHandler);
   }
 
   private onTextComplete(node: DialogueNode): void {
-    // Show evidence notification if needed
     if (node.evidenceGrant) {
       const ev = EvidenceManager.getById(node.evidenceGrant);
       if (ev) {
@@ -159,12 +269,22 @@ export class DialogueScene extends Phaser.Scene {
 
     const choices = DialogueManager.getAvailableChoices(node);
     if (choices.length > 0) {
-      this.showChoices(choices);
-    } else if (node.next) {
-      // Show continue prompt
+      this.showChoices(choices, node);
+    } else if (node.returnTo && this.npcId) {
+      // returnTo: go back to parent node with choices
       this.continueHint.setAlpha(1);
       this.input.once('pointerdown', () => {
-        const nextNode = DialogueManager.getNode(this.npcId, node.next!);
+        const returnNode = DialogueManager.getNode(this.npcId!, node.returnTo!);
+        if (returnNode) {
+          this.showNode(returnNode);
+        } else {
+          this.closeDialogue();
+        }
+      });
+    } else if (node.next) {
+      this.continueHint.setAlpha(1);
+      this.input.once('pointerdown', () => {
+        const nextNode = DialogueManager.getNode(this.npcId!, node.next!);
         if (nextNode) {
           this.showNode(nextNode);
         } else {
@@ -174,65 +294,77 @@ export class DialogueScene extends Phaser.Scene {
     } else if (node.isEnd) {
       this.continueHint.setText('✕');
       this.continueHint.setAlpha(1);
-      this.input.once('pointerdown', () => {
-        this.closeDialogue();
-      });
+      this.input.once('pointerdown', () => this.closeDialogue());
     } else {
-      // End of dialogue
       this.continueHint.setText('✕');
       this.continueHint.setAlpha(1);
-      this.input.once('pointerdown', () => {
-        this.closeDialogue();
-      });
+      this.input.once('pointerdown', () => this.closeDialogue());
     }
   }
 
-  private showChoices(choices: DialogueChoice[]): void {
+  private showChoices(choices: DialogueChoice[], parentNode: DialogueNode): void {
     this.clearChoices();
     const boxY = GAME_HEIGHT - 280;
+    const bodyX = this.npcId ? 160 : 40;
     const startY = boxY + 140;
 
     choices.forEach((choice, i) => {
       const cy = startY + i * 32;
-      const choiceBg = this.add.graphics();
-      choiceBg.fillStyle(COLORS.DARK_PURPLE, 0.6);
-      choiceBg.fillRect(160, cy, GAME_WIDTH - 220, 28);
 
-      const text = this.add.text(170, cy + 4, `▸ ${choice.text}`, {
+      // Check if this choice has been used (via flagSet)
+      const isUsed = choice.flagSet ? StateManager.hasSeenDialogue('choice_' + choice.flagSet) : false;
+
+      const choiceBg = this.add.graphics();
+      choiceBg.fillStyle(COLORS.DARK_PURPLE, isUsed ? 0.3 : 0.6);
+      choiceBg.fillRect(bodyX, cy, GAME_WIDTH - bodyX - 60, 28);
+
+      const prefix = isUsed ? '✓ ' : '▸ ';
+      const text = this.add.text(bodyX + 10, cy + 4, `${prefix}${choice.text}`, {
         fontFamily: FONTS.BODY,
         fontSize: '18px',
-        color: CSS_COLORS.NEON_CYAN,
+        color: isUsed ? '#666666' : CSS_COLORS.NEON_CYAN,
       });
 
-      const zone = this.add.rectangle(160 + (GAME_WIDTH - 220) / 2, cy + 14, GAME_WIDTH - 220, 28, 0x000000, 0)
-        .setInteractive({ useHandCursor: true });
+      if (isUsed) {
+        text.setAlpha(0.5);
+      }
 
-      zone.on('pointerover', () => {
-        text.setColor(CSS_COLORS.NEON_PINK);
-        choiceBg.clear();
-        choiceBg.fillStyle(COLORS.NEON_PINK, 0.2);
-        choiceBg.fillRect(160, cy, GAME_WIDTH - 220, 28);
-      });
+      const zone = this.add.rectangle(bodyX + (GAME_WIDTH - bodyX - 60) / 2, cy + 14, GAME_WIDTH - bodyX - 60, 28, 0x000000, 0)
+        .setInteractive({ useHandCursor: !isUsed });
 
-      zone.on('pointerout', () => {
-        text.setColor(CSS_COLORS.NEON_CYAN);
-        choiceBg.clear();
-        choiceBg.fillStyle(COLORS.DARK_PURPLE, 0.6);
-        choiceBg.fillRect(160, cy, GAME_WIDTH - 220, 28);
-      });
+      if (!isUsed) {
+        zone.on('pointerover', () => {
+          text.setColor(CSS_COLORS.NEON_PINK);
+          choiceBg.clear();
+          choiceBg.fillStyle(COLORS.NEON_PINK, 0.2);
+          choiceBg.fillRect(bodyX, cy, GAME_WIDTH - bodyX - 60, 28);
+        });
 
-      zone.on('pointerdown', () => {
-        DialogueManager.applyChoice(choice);
-        const nextNode = DialogueManager.getNode(this.npcId, choice.next);
-        if (nextNode) {
-          this.showNode(nextNode);
-        } else {
-          this.closeDialogue();
-        }
-      });
+        zone.on('pointerout', () => {
+          text.setColor(CSS_COLORS.NEON_CYAN);
+          choiceBg.clear();
+          choiceBg.fillStyle(COLORS.DARK_PURPLE, 0.6);
+          choiceBg.fillRect(bodyX, cy, GAME_WIDTH - bodyX - 60, 28);
+        });
+
+        zone.on('pointerdown', () => {
+          // Mark this choice as used
+          if (choice.flagSet) {
+            StateManager.markDialogueSeen('choice_' + choice.flagSet);
+          }
+          DialogueManager.applyChoice(choice);
+          const nextNode = DialogueManager.getNode(this.npcId!, choice.next);
+          if (nextNode) {
+            this.showNode(nextNode);
+          } else {
+            this.closeDialogue();
+          }
+        });
+      }
 
       this.choiceTexts.push(text);
       this.choiceZones.push(zone);
+      this.choiceBgs.push(choiceBg);
     });
   }
 
@@ -241,6 +373,8 @@ export class DialogueScene extends Phaser.Scene {
     this.choiceTexts = [];
     this.choiceZones.forEach(z => z.destroy());
     this.choiceZones = [];
+    this.choiceBgs.forEach(b => b.destroy());
+    this.choiceBgs = [];
   }
 
   private showEvidencePopup(name: string): void {

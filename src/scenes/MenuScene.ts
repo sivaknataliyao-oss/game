@@ -88,7 +88,7 @@ export class MenuScene extends Phaser.Scene {
       StateManager.reset();
       this.vhs.triggerHeavyGlitch();
       this.time.delayedCall(500, () => {
-        this.scene.start('GameScene');
+        this.scene.start('PrologueScene');
       });
     });
 

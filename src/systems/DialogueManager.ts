@@ -6,31 +6,30 @@ export interface DialogueChoice {
   next: string;
   flagRequired?: string;
   flagSet?: string;
-  trustChange?: { npc: NpcId; amount: number };
   evidenceGrant?: string;
   roomUnlock?: string;
-  advanceStory?: boolean;
 }
 
 export interface DialogueNode {
   id: string;
   speaker: string;
   text: string;
+  lines?: string[];
   choices?: DialogueChoice[];
   next?: string;
+  returnTo?: string;
   flagRequired?: string;
-  seedVariant?: string; // 'A', 'B', 'C' or undefined for all
   evidenceGrant?: string;
-  trustChange?: { npc: NpcId; amount: number };
-  advanceStory?: boolean;
   isEnd?: boolean;
   flagSet?: string;
+  setFlags?: Record<string, boolean>;
 }
 
 export interface DialogueTree {
   npcId: NpcId;
   startNode: string;
   nodes: Record<string, DialogueNode>;
+  getStartNodeId?: (state: { dialoguesSeen: Record<string, boolean>; evidenceFlags: Record<string, boolean>; clueCount: number }) => string;
 }
 
 class DialogueManagerClass {
@@ -53,6 +52,18 @@ class DialogueManagerClass {
   getStartNode(npcId: NpcId): DialogueNode | undefined {
     const tree = this.trees.get(npcId);
     if (!tree) return undefined;
+
+    if (tree.getStartNodeId) {
+      const state = StateManager.get();
+      const clueCount = StateManager.getCollectedEvidenceCount();
+      const nodeId = tree.getStartNodeId({
+        dialoguesSeen: state.dialoguesSeen,
+        evidenceFlags: state.evidenceFlags,
+        clueCount,
+      });
+      return tree.nodes[nodeId];
+    }
+
     return tree.nodes[tree.startNode];
   }
 
@@ -71,14 +82,8 @@ class DialogueManagerClass {
     if (choice.flagSet) {
       StateManager.markDialogueSeen(choice.flagSet);
     }
-    if (choice.trustChange) {
-      StateManager.addTrust(choice.trustChange.npc, choice.trustChange.amount);
-    }
     if (choice.evidenceGrant) {
       StateManager.collectEvidence(choice.evidenceGrant);
-    }
-    if (choice.advanceStory) {
-      StateManager.advanceStory();
     }
   }
 
@@ -86,18 +91,19 @@ class DialogueManagerClass {
     if (node.evidenceGrant) {
       StateManager.collectEvidence(node.evidenceGrant);
     }
-    if (node.trustChange) {
-      StateManager.addTrust(node.trustChange.npc, node.trustChange.amount);
+    if (node.setFlags) {
+      for (const [key, value] of Object.entries(node.setFlags)) {
+        if (value) StateManager.markDialogueSeen(key);
+      }
     }
-    if (node.advanceStory) {
-      StateManager.advanceStory();
+    if (node.flagSet) {
+      StateManager.markDialogueSeen(node.flagSet);
     }
     StateManager.markDialogueSeen(node.id);
   }
 
   shouldShowNode(node: DialogueNode): boolean {
     const state = StateManager.get();
-    if (node.seedVariant && node.seedVariant !== state.variantSeed) return false;
     if (node.flagRequired && !state.dialoguesSeen[node.flagRequired] && !state.evidenceFlags[node.flagRequired]) return false;
     return true;
   }

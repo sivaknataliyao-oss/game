@@ -47,26 +47,20 @@ export enum RoomId {
 
 export enum NpcId {
   SVETA = 'sveta',
-  DIMA = 'dima',
-  MAKS = 'maks',
-  ARINA = 'arina',
-  LENA = 'lena',
+  GLAM = 'glam',
+  VIEWER = 'viewer',
 }
 
 export const NPC_NAMES: Record<NpcId, string> = {
   [NpcId.SVETA]: 'Света',
-  [NpcId.DIMA]: 'Дима',
-  [NpcId.MAKS]: 'Макс',
-  [NpcId.ARINA]: 'Арина',
-  [NpcId.LENA]: 'Лена',
+  [NpcId.GLAM]: 'Гламурная',
+  [NpcId.VIEWER]: 'Зритель',
 };
 
 export const NPC_COLORS: Record<NpcId, number> = {
-  [NpcId.SVETA]: 0x4FC3F7,
-  [NpcId.DIMA]: 0xFF8A65,
-  [NpcId.MAKS]: 0x81C784,
-  [NpcId.ARINA]: 0xF06292,
-  [NpcId.LENA]: 0xBA68C8,
+  [NpcId.SVETA]: 0x2A8A8A,
+  [NpcId.GLAM]: 0xCC4488,
+  [NpcId.VIEWER]: 0x3A5A3A,
 };
 
 export const ROOM_NAMES: Record<RoomId, string> = {
@@ -75,27 +69,24 @@ export const ROOM_NAMES: Record<RoomId, string> = {
   [RoomId.KITCHEN]: 'Кухня',
   [RoomId.LIBRARY]: 'Библиотека',
   [RoomId.GARDEN]: 'Сад',
-  [RoomId.BEDROOM]: 'Спальня',
+  [RoomId.BEDROOM]: 'Спальня Semiira',
   [RoomId.BATHROOM]: 'Ванная',
   [RoomId.BASEMENT]: 'Подвал',
   [RoomId.ATTIC]: 'Чердак',
   [RoomId.MIRROR_ROOM]: 'Зеркальная комната',
-  [RoomId.SECRET_ROOM]: 'Секретная комната',
+  [RoomId.SECRET_ROOM]: 'Личная комната',
 };
 
 export const ROOM_DESCRIPTIONS: Record<RoomId, string> = {
-  [RoomId.ENTRANCE]: 'Парадный вход. Гирлянды мигают неровно.',
-  [RoomId.LIVING_ROOM]: 'Главный зал. Гости шепчутся по углам.',
-  [RoomId.KITCHEN]: 'Пахнет выпечкой. И чем-то ещё.',
-  [RoomId.LIBRARY]: 'Книги от пола до потолка. Тишина давит.',
-  [RoomId.GARDEN]: 'Лунный свет. Цветы закрываются на ночь.',
-  [RoomId.BEDROOM]: 'Твоя комната. Но что-то изменилось.',
+  [RoomId.ENTRANCE]: 'Парадный вход. Гирлянды мигают неровно. Книга гостей на столе.',
+  [RoomId.LIVING_ROOM]: 'Главный зал вечеринки. Дискошар, неон, VHS-эстетика.',
+  [RoomId.KITCHEN]: 'Бар-зона. Бутылки, свечи. Кошка на стойке.',
+  [RoomId.LIBRARY]: 'Тихо. Экраны со старыми стримами. Кто-то пересматривает.',
+  [RoomId.GARDEN]: 'Лунный свет. Сухие цветы. Забытая скамейка.',
+  [RoomId.BEDROOM]: 'Её комната. Плюшевая игрушка на кровати. Блокнот.',
   [RoomId.BATHROOM]: 'Зеркало запотело. Кто-то написал на нём.',
-  [RoomId.BASEMENT]: 'Темно. Мерцает старый телевизор.',
-  [RoomId.ATTIC]: 'Пыль и забытые вещи. Коробки с воспоминаниями.',
-  [RoomId.MIRROR_ROOM]: 'Всё отражено. Но неправильно.',
-  [RoomId.SECRET_ROOM]: 'Ты нашла правду. Или она нашла тебя.',
+  [RoomId.BASEMENT]: 'Старая стриминговая студия. Сломанная камера.',
+  [RoomId.ATTIC]: 'Архив. Коробки с фанатскими письмами и старыми костюмами.',
+  [RoomId.MIRROR_ROOM]: 'Зеркала повсюду. Каждое показывает другую.',
+  [RoomId.SECRET_ROOM]: 'Здесь она была собой. Без камер, без масок.',
 };
-
-export type SeedVariant = 'A' | 'B' | 'C';
-export type SemiiraVersion = 'festive' | 'true' | 'reflected';

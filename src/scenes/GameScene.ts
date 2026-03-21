@@ -5,6 +5,7 @@ import { StateManager } from '../systems/StateManager';
 import { RoomManager, RoomDef } from '../systems/RoomManager';
 import { EvidenceManager } from '../systems/EvidenceManager';
 import { DialogueManager } from '../systems/DialogueManager';
+import { getObjectById } from '../data/objects';
 import { registerAllRooms } from '../rooms/index';
 import { registerAllDialogues } from '../data/dialogue/index';
 
@@ -54,7 +55,6 @@ export class GameScene extends Phaser.Scene {
     this.createMiniMap();
     this.setupInput();
 
-    // Room transition effect
     this.cameras.main.fadeIn(500, 0x1A, 0x1A, 0x2E);
   }
 
@@ -68,7 +68,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private renderRoom(room: RoomDef): void {
-    // Clear previous
     this.floorTiles.forEach(t => t.destroy());
     this.floorTiles = [];
     this.furnitureSprites.forEach(s => s.destroy());
@@ -80,13 +79,11 @@ export class GameScene extends Phaser.Scene {
     this.exitZones.forEach(z => z.destroy());
     this.exitZones = [];
 
-    // Background
     const bg = this.add.graphics();
     bg.fillStyle(room.ambientColor, 1);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     bg.setDepth(-10);
 
-    // Draw floor tiles
     const tileKeys = ['tile_wood', 'tile_stone', 'tile_carpet', 'tile_grass', 'tile_dark', 'tile_mirror', 'tile_marble'];
     for (let gy = 0; gy < room.height; gy++) {
       for (let gx = 0; gx < room.width; gx++) {
@@ -98,14 +95,12 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // Draw hotspots (interactive objects)
     for (const hs of room.hotspots) {
       const { x, y } = this.toIso(hs.x, hs.y);
       const furnitureKey = this.getFurnitureKeyForHotspot(hs.label);
       const sprite = this.add.sprite(x, y - 16, furnitureKey).setDepth(hs.x + hs.y + 1);
       this.furnitureSprites.push(sprite);
 
-      // Clickable area
       const zone = this.add.rectangle(x, y - 16, 48, 48, 0x000000, 0)
         .setInteractive({ useHandCursor: true })
         .setDepth(hs.x + hs.y + 2);
@@ -119,19 +114,17 @@ export class GameScene extends Phaser.Scene {
         this.hideTooltip();
       });
       zone.on('pointerdown', () => {
-        this.handleHotspot(hs.label, hs.evidenceId, hs.dialogueTriggerId);
+        this.handleHotspot(hs);
       });
       this.hotspotZones.push(zone);
     }
 
-    // Draw NPCs
     for (const npcDef of room.npcs) {
       const { x, y } = this.toIso(npcDef.x, npcDef.y);
       const npcKey = `npc_${npcDef.npcId}`;
       const sprite = this.add.sprite(x, y - 24, npcKey).setDepth(npcDef.x + npcDef.y + 3);
       this.npcSprites.set(npcDef.npcId, sprite);
 
-      // NPC name label
       const name = NPC_NAMES[npcDef.npcId];
       this.add.text(x, y - 52, name, {
         fontFamily: FONTS.BODY,
@@ -139,7 +132,6 @@ export class GameScene extends Phaser.Scene {
         color: CSS_COLORS.NEON_PINK,
       }).setOrigin(0.5).setDepth(npcDef.x + npcDef.y + 4);
 
-      // NPC idle animation
       this.tweens.add({
         targets: sprite,
         y: y - 24 - 3,
@@ -149,7 +141,6 @@ export class GameScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
 
-      // Clickable
       const npcZone = this.add.rectangle(x, y - 24, 32, 48, 0x000000, 0)
         .setInteractive({ useHandCursor: true })
         .setDepth(npcDef.x + npcDef.y + 5);
@@ -168,7 +159,6 @@ export class GameScene extends Phaser.Scene {
       this.hotspotZones.push(npcZone);
     }
 
-    // Draw exits
     const availableExits = RoomManager.getAvailableExits(room.id);
     for (const exit of availableExits) {
       const { x, y } = this.toIso(exit.x, exit.y);
@@ -188,7 +178,6 @@ export class GameScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .setDepth(901);
 
-      // Pulse animation
       this.tweens.add({
         targets: arrow,
         alpha: 0.4,
@@ -208,17 +197,18 @@ export class GameScene extends Phaser.Scene {
 
   private getFurnitureKeyForHotspot(label: string): string {
     const lower = label.toLowerCase();
-    if (lower.includes('стол') || lower.includes('стойк')) return 'furniture_table';
-    if (lower.includes('стул') || lower.includes('кресл')) return 'furniture_chair';
-    if (lower.includes('книг') || lower.includes('шкаф') || lower.includes('полк')) return 'furniture_bookshelf';
-    if (lower.includes('кроват') || lower.includes('диван')) return 'furniture_bed';
-    if (lower.includes('зеркал')) return 'furniture_mirror';
-    if (lower.includes('свеч') || lower.includes('ламп')) return 'furniture_candle';
-    if (lower.includes('телевиз') || lower.includes('экран') || lower.includes('VHS') || lower.includes('кассет')) return 'furniture_tv';
-    if (lower.includes('коробк') || lower.includes('ящик') || lower.includes('сунд')) return 'furniture_box';
-    if (lower.includes('цвет') || lower.includes('раст') || lower.includes('куст')) return 'furniture_plant';
-    if (lower.includes('торт') || lower.includes('еда') || lower.includes('тарелк')) return 'furniture_cake';
+    if (lower.includes('стол') || lower.includes('стойк') || lower.includes('стул')) return 'furniture_table';
+    if (lower.includes('книг') || lower.includes('шкаф') || lower.includes('полк') || lower.includes('дневник')) return 'furniture_bookshelf';
+    if (lower.includes('кроват') || lower.includes('диван') || lower.includes('плюш') || lower.includes('игруш')) return 'furniture_bed';
+    if (lower.includes('зеркал') || lower.includes('осколок')) return 'furniture_mirror';
+    if (lower.includes('свеч') || lower.includes('ламп') || lower.includes('фонар')) return 'furniture_candle';
+    if (lower.includes('телевиз') || lower.includes('экран') || lower.includes('vhs') || lower.includes('кассет') || lower.includes('монитор') || lower.includes('камер')) return 'furniture_tv';
+    if (lower.includes('коробк') || lower.includes('ящик') || lower.includes('сунд') || lower.includes('чемодан') || lower.includes('корзин') || lower.includes('письм')) return 'furniture_box';
+    if (lower.includes('цвет') || lower.includes('раст') || lower.includes('куст') || lower.includes('фото')) return 'furniture_plant';
+    if (lower.includes('торт') || lower.includes('еда') || lower.includes('тарелк') || lower.includes('бокал') || lower.includes('бутыл') || lower.includes('кошк') || lower.includes('кот')) return 'furniture_cake';
     if (lower.includes('дверь') || lower.includes('выход') || lower.includes('вход')) return 'furniture_door';
+    if (lower.includes('кресл') || lower.includes('скаме') || lower.includes('блокнот') || lower.includes('записк') || lower.includes('награ')) return 'furniture_chair';
+    if (lower.includes('костюм') || lower.includes('альбом') || lower.includes('вешал') || lower.includes('полотен') || lower.includes('косметик')) return 'furniture_box';
     return 'furniture_table';
   }
 
@@ -234,7 +224,6 @@ export class GameScene extends Phaser.Scene {
   private createUI(): void {
     this.uiContainer = this.add.container(0, 0).setDepth(950);
 
-    // Room name
     const roomBg = this.add.graphics();
     roomBg.fillStyle(COLORS.DEEP_PURPLE, 0.85);
     roomBg.fillRect(0, 0, GAME_WIDTH, 50);
@@ -281,7 +270,7 @@ export class GameScene extends Phaser.Scene {
 
     // Evidence counter
     const count = StateManager.getCollectedEvidenceCount();
-    const counterText = this.add.text(GAME_WIDTH - 75, 55, `Улики: ${count}/10`, {
+    const counterText = this.add.text(GAME_WIDTH - 75, 55, `🔍 ${count}/10`, {
       fontFamily: FONTS.BODY,
       fontSize: '14px',
       color: CSS_COLORS.NEON_CYAN,
@@ -348,7 +337,6 @@ export class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setAlpha(0.6);
         this.miniMapContainer.add(label);
 
-        // Clickable minimap room
         if (!isCurrent) {
           const zone = this.add.rectangle(rx + 10, ry + 10 + (GAME_HEIGHT - 160), 30, 30, 0x000000, 0)
             .setInteractive({ useHandCursor: true })
@@ -362,17 +350,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
-    // Click to move
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.isMoving) return;
-      // Convert screen coords to iso grid
       const isoPos = this.screenToGrid(pointer.x, pointer.y);
       if (isoPos && this.isValidTile(isoPos.gx, isoPos.gy)) {
         this.movePlayerTo(isoPos.gx, isoPos.gy);
       }
     });
 
-    // Keyboard WASD/arrows
     const cursors = this.input.keyboard!.createCursorKeys();
     const wasd = this.input.keyboard!.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -402,7 +387,6 @@ export class GameScene extends Phaser.Scene {
       },
     });
 
-    // Escape for journal
     this.input.keyboard!.on('keydown-ESC', () => {
       this.scene.launch('JournalScene');
       this.scene.pause();
@@ -444,7 +428,8 @@ export class GameScene extends Phaser.Scene {
 
   private transitionToRoom(roomId: RoomId): void {
     if (!StateManager.isRoomUnlocked(roomId)) {
-      this.showNotification('Эта комната пока закрыта');
+      const count = StateManager.getCollectedEvidenceCount();
+      this.showNotification(`Закрыто. Нужно больше улик (${count}/10)`);
       return;
     }
 
@@ -462,37 +447,51 @@ export class GameScene extends Phaser.Scene {
     this.scene.pause();
   }
 
-  private handleHotspot(label: string, evidenceId?: string, dialogueTriggerId?: string): void {
-    if (evidenceId) {
-      const item = EvidenceManager.collect(evidenceId);
-      if (item) {
-        this.showNotification(`Улика найдена: ${item.name}`);
-        this.vhs.triggerGlitch();
-        // Check if should advance story
-        const count = StateManager.getCollectedEvidenceCount();
-        if (count % 2 === 0) {
-          StateManager.advanceStory();
-        }
-        // Check for mirror room unlock
-        if (evidenceId === 'mirror_key') {
-          StateManager.unlockRoom(RoomId.MIRROR_ROOM);
-          this.showNotification('Зеркальная комната открыта!');
-        }
-        // Check for secret room
-        if (StateManager.getAllEvidenceCollected()) {
-          StateManager.unlockRoom(RoomId.SECRET_ROOM);
-          this.showNotification('Секретная комната открыта!');
-        }
-      } else if (EvidenceManager.isCollected(evidenceId)) {
-        const item = EvidenceManager.getById(evidenceId);
-        this.showNotification(item ? item.detailText : label);
+  private handleHotspot(hs: { label: string; evidenceId?: string; action?: string; dialogueTriggerId?: string }): void {
+    // Evidence items
+    if (hs.evidenceId) {
+      const evItem = EvidenceManager.getById(hs.evidenceId);
+
+      // Check if this is a locked conditional item
+      if (evItem && EvidenceManager.isLocked(hs.evidenceId)) {
+        const lockedText = EvidenceManager.getLockedText(hs.evidenceId);
+        this.showNotification(lockedText || 'Заперто.');
+        return;
       }
-    } else if (dialogueTriggerId) {
-      // Trigger a special dialogue
-      this.showNotification(label);
-    } else {
-      this.showNotification(label);
+
+      const item = EvidenceManager.collect(hs.evidenceId);
+      if (item) {
+        this.showNotification(`🔍 ${item.name}`);
+        this.vhs.triggerGlitch();
+      } else if (EvidenceManager.isCollected(hs.evidenceId)) {
+        const collected = EvidenceManager.getById(hs.evidenceId);
+        this.showNotification(collected ? collected.detailText.substring(0, 60) + '...' : hs.label);
+      }
+      return;
     }
+
+    // Interactive objects with action IDs
+    if (hs.action) {
+      const obj = getObjectById(hs.action);
+      if (obj) {
+        const seen = StateManager.hasSeenDialogue('obj_' + obj.id);
+        const lines = seen ? obj.repeatLines : obj.firstLines;
+        if (!seen) {
+          StateManager.markDialogueSeen('obj_' + obj.id);
+        }
+        // Show as dialogue
+        this.scene.launch('DialogueScene', {
+          objectLines: lines,
+          objectLabel: obj.label,
+          isVhs: obj.isVhs,
+        });
+        this.scene.pause();
+        return;
+      }
+    }
+
+    // Generic hotspot — just show label
+    this.showNotification(hs.label);
   }
 
   private showNotification(text: string): void {
@@ -541,13 +540,12 @@ export class GameScene extends Phaser.Scene {
   update(time: number): void {
     this.vhs.update(time);
 
-    // Check finale trigger
+    // Check finale trigger — Secret Room with all evidence
     const state = StateManager.get();
-    if (state.currentRoom === RoomId.MIRROR_ROOM && state.storyProgress >= 8) {
-      // Auto-trigger finale after exploring mirror room
+    if (state.currentRoom === RoomId.SECRET_ROOM) {
       if (!state.dialoguesSeen['finale_triggered']) {
         StateManager.markDialogueSeen('finale_triggered');
-        this.time.delayedCall(2000, () => {
+        this.time.delayedCall(3000, () => {
           this.vhs.triggerHeavyGlitch();
           this.time.delayedCall(500, () => {
             this.scene.start('FinaleScene');

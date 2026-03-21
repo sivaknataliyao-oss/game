@@ -46,19 +46,11 @@ export class JournalScene extends Phaser.Scene {
       color: CSS_COLORS.NEON_CYAN,
     }).setOrigin(0.5);
 
-    // Seed info
-    const state = StateManager.get();
-    this.add.text(GAME_WIDTH / 2, panelY + 80, `Вариант: ${state.variantSeed} | Прогресс: ${state.storyProgress}/11`, {
-      fontFamily: FONTS.BODY,
-      fontSize: '14px',
-      color: CSS_COLORS.WHITE,
-    }).setOrigin(0.5).setAlpha(0.4);
-
     // Evidence grid
     const allEvidence = EvidenceManager.getAll();
     const cols = 5;
     const startX = panelX + 40;
-    const startY = panelY + 110;
+    const startY = panelY + 90;
     const cellW = (panelW - 80) / cols;
     const cellH = 80;
 
@@ -82,8 +74,11 @@ export class JournalScene extends Phaser.Scene {
 
       // Icon
       if (isCollected) {
-        this.add.image(cx + (cellW - 8) / 2, cy + 20, 'evidence_icon')
-          .setScale(1.2);
+        this.add.text(cx + (cellW - 8) / 2, cy + 20, '✦', {
+          fontFamily: FONTS.BODY,
+          fontSize: '24px',
+          color: CSS_COLORS.NEON_CYAN,
+        }).setOrigin(0.5);
       } else {
         this.add.text(cx + (cellW - 8) / 2, cy + 20, '?', {
           fontFamily: FONTS.TITLE,

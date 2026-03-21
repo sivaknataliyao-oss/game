@@ -1,14 +1,10 @@
 import { DialogueManager } from '../../systems/DialogueManager';
 import { svetaDialogue } from './sveta';
-import { dimaDialogue } from './dima';
-import { maksDialogue } from './maks';
-import { arinaDialogue } from './arina';
-import { lenaDialogue } from './lena';
+import { glamDialogue } from './dima';
+import { viewerDialogue } from './maks';
 
 export function registerAllDialogues(): void {
   DialogueManager.registerTree(svetaDialogue);
-  DialogueManager.registerTree(dimaDialogue);
-  DialogueManager.registerTree(maksDialogue);
-  DialogueManager.registerTree(arinaDialogue);
-  DialogueManager.registerTree(lenaDialogue);
+  DialogueManager.registerTree(glamDialogue);
+  DialogueManager.registerTree(viewerDialogue);
 }

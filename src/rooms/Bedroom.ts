@@ -3,8 +3,8 @@ import { RoomManager, RoomDef } from '../systems/RoomManager';
 
 const room: RoomDef = {
   id: RoomId.BEDROOM,
-  name: 'Спальня',
-  description: 'Твоя комната. Но что-то изменилось.',
+  name: 'Спальня Semiira',
+  description: 'Её комната. Плюшевая игрушка на кровати. Блокнот.',
   width: 8,
   height: 7,
   tileColors: [
@@ -21,12 +21,12 @@ const room: RoomDef = {
     { targetRoom: RoomId.BATHROOM, x: 7, y: 3, label: '→ Ванная' },
   ],
   hotspots: [
-    { x: 3, y: 1, width: 1, height: 1, label: 'Кровать с балдахином' },
-    { x: 6, y: 1, width: 1, height: 1, label: 'Туалетный столик' },
-    { x: 1, y: 3, width: 1, height: 1, label: 'Шкаф с одеждой' },
-    { x: 5, y: 3, width: 1, height: 1, label: 'Зеркало в раме', evidenceId: 'mirror_shard' },
-    { x: 3, y: 5, width: 1, height: 1, label: 'Коробка с фотографиями' },
-    { x: 6, y: 5, width: 1, height: 1, label: 'Лампа на тумбочке' },
+    { x: 3, y: 1, width: 1, height: 1, label: 'Плюшевая игрушка', action: 'plushie' },
+    { x: 6, y: 1, width: 1, height: 1, label: 'Монитор', action: 'monitor' },
+    { x: 1, y: 3, width: 1, height: 1, label: 'Блокнот', action: 'notebook' },
+    { x: 5, y: 3, width: 1, height: 1, label: 'Осколок зеркала', evidenceId: 'clue_mirror' },
+    { x: 5, y: 5, width: 1, height: 1, label: 'Ящик стола', evidenceId: 'clue_real_tape' },
+    { x: 3, y: 5, width: 1, height: 1, label: 'Кровать' },
   ],
   npcs: [],
   ambientColor: 0x201520,

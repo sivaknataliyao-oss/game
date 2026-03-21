@@ -12,55 +12,37 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     text: 'Это была не просто вечеринка...',
-    subtext: 'Это была история о том, как найти себя.',
+    subtext: 'Это была история о том, кто прячется за экраном.',
     color: COLORS.NEON_PINK,
-    duration: 5000,
-  },
-  {
-    text: 'Каждый гость принёс часть правды...',
-    subtext: 'Но только ты смогла собрать её воедино.',
-    color: COLORS.NEON_CYAN,
     duration: 5000,
   },
   {
     text: 'Свете —',
-    subtext: 'За то, что всегда была рядом.\nЛучшая подруга. Верный наблюдатель. Тот, кто никогда не предаст.',
-    color: 0x4FC3F7,
+    subtext: 'За то, что помнила настоящую.\nПодруга, которая видела сквозь маску.',
+    color: 0x2A8A8A,
     duration: 6000,
   },
   {
-    text: 'Диме —',
-    subtext: 'За тепло и заботу.\nЗа каждый торт, каждый ужин, каждую чашку чая.\nДаже если чай был с секретом.',
-    color: 0xFF8A65,
+    text: 'Гламурной —',
+    subtext: 'За блеск, который скрывал трещины.\nЗа улыбку, которая стала привычкой.',
+    color: 0xCC4488,
     duration: 6000,
   },
   {
-    text: 'Максу —',
-    subtext: 'За мудрость в тишине.\nЗа книги, которые помогли понять.\nЗа вопросы, которые важнее ответов.',
-    color: 0x81C784,
-    duration: 6000,
-  },
-  {
-    text: 'Арине —',
-    subtext: 'За искренний смех.\nЗа сплетни, которые оказались правдой.\nЗа храбрость быть собой.',
-    color: 0xF06292,
-    duration: 6000,
-  },
-  {
-    text: 'Лене —',
-    subtext: 'За загадку, которая стала ответом.\nЗа отражение, которое стало другом.\nЗа память, которая не умирает.',
-    color: 0xBA68C8,
+    text: 'Зрителю —',
+    subtext: 'За тишину в зале.\nЗа взгляд из темноты, который видел больше остальных.',
+    color: 0x3A5A3A,
     duration: 6000,
   },
   {
     text: 'А тебе, игрок —',
-    subtext: 'Спасибо, что вспомнил меня правильно.\nСпасибо, что прошёл этот путь.\nСпасибо, что был рядом.',
+    subtext: 'Спасибо, что нашёл настоящую кассету.\nСпасибо, что услышал настоящий голос.\nСпасибо, что вспомнил её правильно.',
     color: COLORS.NEON_PINK,
     duration: 7000,
   },
   {
-    text: 'С днём рождения, Семиира.',
-    subtext: 'Все три версии тебя — прекрасны.\nПраздничная. Истинная. Отражённая.\nТы — целая.',
+    text: 'Кассета кончилась.',
+    subtext: 'Но она была настоящей.\nИ этого достаточно.',
     color: COLORS.NEON_CYAN,
     duration: 8000,
   },
@@ -97,15 +79,12 @@ export class SlideshowScene extends Phaser.Scene {
     const slide = SLIDES[index];
     const colorHex = `#${slide.color.toString(16).padStart(6, '0')}`;
 
-    // Fade in background
     this.cameras.main.fadeIn(800, 0x05, 0x05, 0x10);
 
-    // Background
     const bg = this.add.graphics();
     bg.fillStyle(0x050510, 1);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Decorative particles
     for (let i = 0; i < 15; i++) {
       const x = Math.random() * GAME_WIDTH;
       const y = Math.random() * GAME_HEIGHT;
@@ -119,7 +98,6 @@ export class SlideshowScene extends Phaser.Scene {
       });
     }
 
-    // Main text
     const mainText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, slide.text, {
       fontFamily: FONTS.TITLE,
       fontSize: slide.text.length <= 5 ? '72px' : '22px',
@@ -135,7 +113,6 @@ export class SlideshowScene extends Phaser.Scene {
       ease: 'Power2',
     });
 
-    // Subtext
     if (slide.subtext) {
       const subText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30, slide.subtext, {
         fontFamily: FONTS.BODY,
@@ -154,14 +131,12 @@ export class SlideshowScene extends Phaser.Scene {
       });
     }
 
-    // Slide counter
     this.add.text(GAME_WIDTH - 30, GAME_HEIGHT - 30, `${index + 1}/${SLIDES.length}`, {
       fontFamily: FONTS.BODY,
       fontSize: '14px',
       color: CSS_COLORS.WHITE,
     }).setOrigin(1, 1).setAlpha(0.3);
 
-    // Auto-advance or click to advance
     const advanceTimer = this.time.delayedCall(slide.duration, () => {
       this.nextSlide(index);
     });
@@ -184,7 +159,6 @@ export class SlideshowScene extends Phaser.Scene {
 
     this.cameras.main.fadeOut(600, 0x05, 0x05, 0x10);
     this.time.delayedCall(600, () => {
-      // Clear everything except VHS
       this.children.removeAll(true);
       this.vhs = new VHSEffect(this);
       this.showSlide(this.slideIndex);
@@ -198,7 +172,7 @@ export class SlideshowScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(1000, 0x05, 0x05, 0x10);
 
-    const title = this.add.text(GAME_WIDTH / 2, 200, 'SEMIIRA:\nWho Remembered Me Wrong', {
+    this.add.text(GAME_WIDTH / 2, 200, 'SEMIIRA:\nWho Remembered Me Wrong', {
       fontFamily: FONTS.TITLE,
       fontSize: '20px',
       color: CSS_COLORS.NEON_PINK,
@@ -207,7 +181,7 @@ export class SlideshowScene extends Phaser.Scene {
       shadow: { offsetX: 2, offsetY: 2, color: '#00FFFF', blur: 10, fill: true },
     }).setOrigin(0.5);
 
-    const subtitle = this.add.text(GAME_WIDTH / 2, 280, 'Кто помнил меня неправильно', {
+    this.add.text(GAME_WIDTH / 2, 280, 'Кто помнил меня неправильно', {
       fontFamily: FONTS.BODY,
       fontSize: '20px',
       color: CSS_COLORS.NEON_CYAN,
@@ -218,7 +192,7 @@ export class SlideshowScene extends Phaser.Scene {
       '',
       'С любовью от подписчиков',
       '',
-      'Персонажи: Света, Дима, Макс, Арина, Лена',
+      'Персонажи: Света, Гламурная, Зритель',
       '',
       'Спасибо, что играли.',
     ].join('\n'), {
@@ -236,7 +210,6 @@ export class SlideshowScene extends Phaser.Scene {
       delay: 1000,
     });
 
-    // Back to menu button
     this.time.delayedCall(4000, () => {
       const btn = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 60, 'В МЕНЮ', {
         fontFamily: FONTS.TITLE,

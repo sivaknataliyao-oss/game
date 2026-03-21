@@ -4,7 +4,7 @@ import { RoomManager, RoomDef } from '../systems/RoomManager';
 const room: RoomDef = {
   id: RoomId.LIVING_ROOM,
   name: 'Гостиная',
-  description: 'Главный зал. Гости шепчутся по углам.',
+  description: 'Главный зал вечеринки. Дискошар, неон, VHS-эстетика.',
   width: 10,
   height: 8,
   tileColors: [
@@ -25,16 +25,15 @@ const room: RoomDef = {
     { targetRoom: RoomId.BEDROOM, x: 0, y: 6, label: '↗ Спальня' },
   ],
   hotspots: [
-    { x: 3, y: 2, width: 1, height: 1, label: 'Большой диван' },
-    { x: 6, y: 2, width: 1, height: 1, label: 'Камин' },
-    { x: 4, y: 5, width: 1, height: 1, label: 'Журнальный столик с фотоальбомом', evidenceId: 'strange_photo' },
-    { x: 7, y: 5, width: 1, height: 1, label: 'Торт на столе' },
-    { x: 2, y: 3, width: 1, height: 1, label: 'Гирлянды мигают' },
-    { x: 8, y: 1, width: 1, height: 1, label: 'Книжная полка' },
+    { x: 3, y: 2, width: 1, height: 1, label: 'VHS-плеер', evidenceId: 'clue_toast_tape' },
+    { x: 7, y: 2, width: 1, height: 1, label: 'Фотография на стене', evidenceId: 'clue_photo' },
+    { x: 5, y: 1, width: 1, height: 1, label: 'Дискошар', action: 'disco' },
+    { x: 2, y: 5, width: 1, height: 1, label: 'Большой диван', action: 'living_sofa' },
+    { x: 7, y: 5, width: 1, height: 1, label: 'Гирлянды', action: 'living_garland' },
+    { x: 8, y: 1, width: 1, height: 1, label: 'Торт на столе' },
   ],
   npcs: [
-    { npcId: NpcId.SVETA, x: 5, y: 3 },
-    { npcId: NpcId.ARINA, x: 7, y: 4 },
+    { npcId: NpcId.GLAM, x: 5, y: 3 },
   ],
   ambientColor: 0x1E1E35,
   playerStart: { x: 1, y: 3 },
